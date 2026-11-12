@@ -1,0 +1,13 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Marco -->
+    <path android:fillColor="#FF3B2414" android:pathData="M34,26h40v58H34z" />
+    <!-- Hoja de la puerta -->
+    <path android:fillColor="#FF9A6233" android:pathData="M38,30h32v54H38z" />
+    <path android:fillColor="#FF6E4322" android:pathData="M46,30h2v54h-2zM56,30h2v54h-2zM38,40h32v4H38zM38,70h32v4H38z" />
+    <!-- Aldaba -->
+    <path android:fillColor="#FFE0A458" android:pathData="M64,55m-4,0a4,4 0,1 1,8 0a4,4 0,1 1,-8 0" />
+</vector>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Puerta" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">#FF15110E</item>
+        <item name="android:statusBarColor">#FF15110E</item>
+        <item name="android:navigationBarColor">#FF15110E</item>
+    </style>
+
+    <style name="Theme.Puerta.Lock">
+        <item name="android:windowBackground">#FF000000</item>
+        <item name="android:windowAnimationStyle">@null</item>
+        <item name="android:windowFullscreen">true</item>
+    </style>
+</resources>
