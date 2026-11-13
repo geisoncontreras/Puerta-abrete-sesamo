@@ -30,7 +30,8 @@ enum class HandStyle(
     PULSERA("Con pulsera", "Una mano con pulsera dorada", R.drawable.mano_pulsera, 118f, 160f, 0.806f),
     INFANTIL("Mano pequeña", "Una mano pequeña y suave", R.drawable.mano_infantil, 106f, 155f, 0.761f),
     GARRA_VERDE("Garra verde", "Una garra de monstruo verde con anillo", R.drawable.mano_garra_verde, 214f, 152f, 0.419f),
-    HUMANA("Mano humana", "Una mano con suéter gris toma el pomo", R.drawable.mano_humana, 85f, 150f, 0.757f);
+    HUMANA("Mano humana", "Una mano con suéter gris toma el pomo", R.drawable.mano_humana, 85f, 150f, 0.757f),
+    PELUDA("Monstruo peludo", "Un brazo peludo naranja con manchas y garras", R.drawable.mano_peluda, 214f, 152f, 0.419f);
 
     /** Brazos de foto: salen de la oscuridad, empujan, sueltan y la puerta sigue sola. */
     val isPhoto: Boolean get() = this == BRAZO_REAL || spriteRes != null
