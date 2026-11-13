@@ -3,6 +3,7 @@ package com.abretesesamo.app.ui.door
 import android.graphics.Matrix
 import android.graphics.Paint
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -19,6 +20,7 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -49,6 +51,7 @@ import com.abretesesamo.app.ui.hand.HandMotion
 import com.abretesesamo.app.ui.hand.drawHand
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlin.math.PI
 import kotlin.math.cos
@@ -125,20 +128,18 @@ fun DoorScene(
         if (handStyle == HandStyle.BRAZO_REAL) {
             // Igual que el modelo: puño que empuja → abre la mano → se retira a la oscuridad
             // mientras la puerta sigue abriéndose sola por el empujón.
+            // Un solo movimiento continuo: arranca suave con el empujón y frena por inercia.
             coroutineScope {
-                door.animateTo(0.22f, tween(350, easing = FastOutSlowInEasing))   // se entreabre
-                val handIn = launch { hand.animateTo(1f, tween(600, easing = FastOutSlowInEasing)) }
+                val doorJob = launch { door.animateTo(1f, tween(2000, easing = CubicBezierEasing(0.32f, 0f, 0.2f, 1f))) }
+                delay(80)
+                launch { hand.animateTo(1f, tween(420, easing = FastOutSlowInEasing)) }   // asoma el puño
+                snapshotFlow { door.value }.first { it >= 0.66f }
+                launch { openHand.animateTo(1f, tween(180)) }                            // abre la mano
+                snapshotFlow { door.value }.first { it >= 0.74f }
+                releaseTip.value = Float.NaN                                             // suelta
+                retract.animateTo(1f, tween(600, easing = FastOutSlowInEasing))         // el brazo se va
+                doorJob.join()
                 delay(250)
-                door.animateTo(0.75f, tween(1200, easing = FastOutSlowInEasing))  // empuja con el puño
-                handIn.join()
-                launch { openHand.animateTo(1f, tween(220)) }                      // abre la mano
-                door.animateTo(0.83f, tween(350, easing = FastOutSlowInEasing))   // último empujón
-                releaseTip.value = Float.NaN                                       // la suelta
-                val inertia = launch { door.animateTo(1f, tween(1500, easing = LinearOutSlowInEasing)) }
-                delay(150)
-                retract.animateTo(1f, tween(800, easing = FastOutSlowInEasing))   // el brazo se va
-                inertia.join()
-                delay(300)
             }
             onOpenFinished()
             return@LaunchedEffect
@@ -206,7 +207,7 @@ fun DoorScene(
                 // Los dos recortes (puño y mano abierta) a la misma escala que en el modelo.
                 val k = h * 0.0016f
                 val baseTop = h * 0.5f - 0.8f * 135f * k
-                val target = freeEdgeX(p, w) - w * 0.012f
+                val target = armTargetX(p, w)
                 val released = releaseTip.value
                 val tip = if (released != null) {
                     val start = if (released.isNaN()) min(target, w).also { releaseTip.value = it } else released
@@ -283,11 +284,39 @@ private fun freeEdge(p: Float, w: Float, h: Float): Triple<Float, Float, Float> 
 
 private fun freeEdgeX(p: Float, w: Float): Float = freeEdge(p, w, 1f).first
 
+/** Grosor de la hoja (canto), en anchos de puerta. */
+private const val THICKNESS = 0.036f
+
+/** Proyecta el borde de atrás del canto (la cara interior de la hoja). */
+private fun backEdge(p: Float, w: Float, h: Float): Triple<Float, Float, Float> {
+    val th = DOOR_MAX_ANGLE * p * PI.toFloat() / 180f
+    val camera = w * CAMERA_DISTANCE
+    val t = w * THICKNESS
+    val x = w - w * cos(th) - t * sin(th)
+    val z = w * sin(th) - t * cos(th)
+    val f = camera / (camera - z)
+    val cx = w / 2f
+    val cy = h / 2f
+    return Triple(cx + (x - cx) * f, cy + (0f - cy) * f, cy + (h - cy) * f)
+}
+
+/** Dónde apoya la mano: en el canto, por detrás de la cara de la hoja. */
+private fun armTargetX(p: Float, w: Float): Float = backEdge(p, w, 1f).first - w * 0.008f
+
 /** Dibuja la imagen de la hoja deformada en perspectiva y la oscurece al girar. */
 private fun DrawScope.drawDoorLeaf(image: ImageBitmap, p: Float, shakeX: Float) {
     val w = size.width
     val h = size.height
     val (ex, top, bottom) = freeEdge(p, w, h)
+    // Canto (grosor de la puerta): franja entre el borde de la cara y el de atrás.
+    if (p > 0f) {
+        val (bx, btop, bbottom) = backEdge(p, w, h)
+        val canto = Path().apply {
+            moveTo(ex + shakeX, top); lineTo(ex + shakeX, bottom); lineTo(bx + shakeX, bbottom); lineTo(bx + shakeX, btop); close()
+        }
+        drawPath(canto, Brush.horizontalGradient(listOf(Color(0xFF8E6E46), Color(0xFFB8935F), Color(0xFFA9844F)), startX = bx + shakeX, endX = ex + shakeX))
+        drawPath(canto, Color.Black.copy(alpha = 0.35f - 0.25f * p))
+    }
     val bmp = image.asAndroidBitmap()
     val bw = bmp.width.toFloat()
     val bh = bmp.height.toFloat()
