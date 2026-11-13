@@ -31,6 +31,7 @@ enum class DoorStyle(
     METAL_OSCURO("Metal oscuro", R.drawable.puerta_metal_oscuro, R.drawable.fondo_metal_luz, R.drawable.fondo_metal_oscuro),
     BLANCA("Blanca", R.drawable.puerta_blanca, R.drawable.fondo_blanca, R.drawable.fondo_metal_oscuro),
     BLANCA_DORADA("Blanca dorada", R.drawable.puerta_blanca_dorada, R.drawable.fondo_blanca_dorada, R.drawable.fondo_metal_oscuro),
+    FLORES("Celeste con flores", R.drawable.puerta_flores, R.drawable.fondo_blanca, R.drawable.fondo_metal_oscuro),
     MADERA_RUSTICA("Madera rústica"),
     METAL_INDUSTRIAL("Metal industrial"),
     MEDIEVAL("Medieval"),
@@ -53,6 +54,7 @@ enum class DoorStyle(
         METAL_LUZ, METAL_INDUSTRIAL -> 0xFF8D9196
         METAL_OSCURO -> 0xFF6F7378
         BLANCA, BLANCA_DORADA, MODERNA -> 0xFFE8E4DC
+        FLORES -> 0xFF8FB8D2
         else -> 0xFFB8935F
     }
 
