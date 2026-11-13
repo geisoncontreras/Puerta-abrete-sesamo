@@ -4,6 +4,7 @@ import android.graphics.Matrix
 import android.graphics.Paint
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -89,6 +90,8 @@ fun DoorScene(
     val sceneShake = remember { Animatable(1f) } // portazo del monstruo
     val wave = remember { Animatable(0f) }       // saludo final del guante
     val retract = remember { Animatable(0f) }    // el brazo real vuelve a la oscuridad
+    val openHand = remember { Animatable(0f) }   // el puño se abre (cuadro 5 del modelo)
+    val releaseTip = remember { mutableStateOf<Float?>(null) } // dónde soltó la puerta
     val clock = remember { mutableFloatStateOf(0f) }
     val ripples = remember { mutableStateListOf<Pair<Long, Offset>>() }
     val rippleId = remember { mutableLongStateOf(0L) }
@@ -96,6 +99,7 @@ fun DoorScene(
 
     val photo = ImageBitmap.imageResource(R.drawable.puerta_modelo)
     val arm = ImageBitmap.imageResource(R.drawable.brazo_real)
+    val armOpen = ImageBitmap.imageResource(R.drawable.mano_abierta)
     // Las puertas dibujadas se pasan a imagen una vez, para poder deformarlas con perspectiva.
     val doorBitmap = remember { mutableStateOf<Pair<IntSize, ImageBitmap>?>(null) }
 
@@ -114,7 +118,29 @@ fun DoorScene(
 
     LaunchedEffect(opening) {
         if (!opening) {
-            door.snapTo(0f); hand.snapTo(0f); wave.snapTo(0f); retract.snapTo(0f)
+            door.snapTo(0f); hand.snapTo(0f); wave.snapTo(0f); retract.snapTo(0f); openHand.snapTo(0f)
+            releaseTip.value = null
+            return@LaunchedEffect
+        }
+        if (handStyle == HandStyle.BRAZO_REAL) {
+            // Igual que el modelo: puño que empuja → abre la mano → se retira a la oscuridad
+            // mientras la puerta sigue abriéndose sola por el empujón.
+            coroutineScope {
+                door.animateTo(0.22f, tween(350, easing = FastOutSlowInEasing))   // se entreabre
+                val handIn = launch { hand.animateTo(1f, tween(600, easing = FastOutSlowInEasing)) }
+                delay(250)
+                door.animateTo(0.75f, tween(1200, easing = FastOutSlowInEasing))  // empuja con el puño
+                handIn.join()
+                launch { openHand.animateTo(1f, tween(220)) }                      // abre la mano
+                door.animateTo(0.83f, tween(350, easing = FastOutSlowInEasing))   // último empujón
+                releaseTip.value = Float.NaN                                       // la suelta
+                val inertia = launch { door.animateTo(1f, tween(1500, easing = LinearOutSlowInEasing)) }
+                delay(150)
+                retract.animateTo(1f, tween(800, easing = FastOutSlowInEasing))   // el brazo se va
+                inertia.join()
+                delay(300)
+            }
+            onOpenFinished()
             return@LaunchedEffect
         }
         coroutineScope {
@@ -177,16 +203,29 @@ fun DoorScene(
 
             // 2. Brazo real, detrás de la hoja
             if (handStyle == HandStyle.BRAZO_REAL && hand.value > 0f) {
-                val sh = h * 0.22f
-                val sw = sh * arm.width / arm.height
+                // Los dos recortes (puño y mano abierta) a la misma escala que en el modelo.
+                val k = h * 0.0016f
+                val baseTop = h * 0.5f - 0.8f * 135f * k
                 val target = freeEdgeX(p, w) - w * 0.012f
-                val tip = min(target, lerp(-0.05f * w, target, hand.value)) - retract.value * w * 0.35f
-                drawImage(
-                    arm,
-                    dstOffset = IntOffset((tip - sw * 0.97f).toInt(), (h * 0.5f - sh * 0.8f).toInt()),
-                    dstSize = IntSize(sw.toInt(), sh.toInt()),
-                    alpha = ((hand.value * 3f).coerceIn(0f, 1f) * (1f - retract.value)).coerceIn(0f, 1f),
-                )
+                val released = releaseTip.value
+                val tip = if (released != null) {
+                    val start = if (released.isNaN()) min(target, w).also { releaseTip.value = it } else released
+                    start - retract.value * w * 0.4f
+                } else {
+                    min(target, lerp(-0.05f * w, target, hand.value))
+                }
+                val a = (hand.value * 3f).coerceIn(0f, 1f) * (1f - retract.value)
+                fun place(img: ImageBitmap, sw: Float, sh: Float, dy: Float, alpha: Float) {
+                    if (alpha <= 0f) return
+                    drawImage(
+                        img,
+                        dstOffset = IntOffset((tip - sw * 0.97f).toInt(), (baseTop + dy).toInt()),
+                        dstSize = IntSize(sw.toInt(), sh.toInt()),
+                        alpha = alpha.coerceIn(0f, 1f),
+                    )
+                }
+                place(arm, 114f * k, 135f * k, 0f, a * (1f - openHand.value))
+                place(armOpen, 128f * k, 155f * k, 5f * k, a * openHand.value)
             }
 
             // 3. Hoja de la puerta
