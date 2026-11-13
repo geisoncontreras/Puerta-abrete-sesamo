@@ -15,6 +15,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -25,8 +27,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -73,6 +73,7 @@ import com.abretesesamo.app.ui.door.drawDoor
 import com.abretesesamo.app.ui.hand.drawHand
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SettingsScreen(settings: SettingsRepository) {
     val context = LocalContext.current
@@ -165,23 +166,23 @@ fun SettingsScreen(settings: SettingsRepository) {
                 "El fondo detrás de la puerta cambia solo: claro de día (7:00 a 19:00) y oscuro de noche.",
                 fontSize = 13.sp,
             )
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(vertical = 4.dp)) {
-                items(DoorStyle.entries) { style ->
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                DoorStyle.entries.forEach { style ->
                     Choice(selected = style == door, label = style.displayName, onClick = { door = style; settings.doorStyle = style; player.metal = style.isMetal }) {
                         val doorPhoto = style.photoRes?.let { ImageBitmap.imageResource(it) }
-                        Canvas(Modifier.size(width = 84.dp, height = 140.dp)) { drawDoor(style, doorPhoto) }
+                        Canvas(Modifier.size(width = 74.dp, height = 124.dp)) { drawDoor(style, doorPhoto) }
                     }
                 }
             }
         }
 
         Section("4. Elige la mano que abre") {
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(vertical = 4.dp)) {
-                items(HandStyle.entries) { style ->
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                HandStyle.entries.forEach { style ->
                     Choice(selected = style == hand, label = style.displayName, onClick = { hand = style; settings.handStyle = style }) {
                         val bg = if (style.isPhoto) Color(0xFF050403) else Color(0xFF3A2A1C)
                         val handPhoto = style.spriteRes?.let { ImageBitmap.imageResource(it) } ?: armPhoto
-                        Canvas(Modifier.size(width = 96.dp, height = 140.dp).clip(RoundedCornerShape(10.dp)).background(bg)) {
+                        Canvas(Modifier.size(width = 74.dp, height = 116.dp).clip(RoundedCornerShape(10.dp)).background(bg)) {
                             if (style.isPhoto) {
                                 val sc = minOf(size.width * 0.95f / handPhoto.width, size.height * 0.9f / handPhoto.height)
                                 val aw = handPhoto.width * sc
@@ -267,7 +268,7 @@ private fun Section(title: String, content: @Composable () -> Unit) {
 private fun Choice(selected: Boolean, label: String, onClick: () -> Unit, preview: @Composable () -> Unit) {
     Column(
         Modifier
-            .width(110.dp)
+            .width(90.dp)
             .border(
                 BorderStroke(if (selected) 3.dp else 1.dp, if (selected) MaterialTheme.colorScheme.primary else Color(0x33FFFFFF)),
                 RoundedCornerShape(12.dp),
