@@ -28,6 +28,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.res.imageResource
+import com.abretesesamo.app.R
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.style.TextAlign
@@ -35,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.abretesesamo.app.audio.KnockPlayer
 import com.abretesesamo.app.model.DoorStyle
 import com.abretesesamo.app.ui.door.drawDoor
 import com.abretesesamo.core.rhythm.Rhythm
@@ -53,6 +57,7 @@ private const val END_OF_TAKE_MS = 2_000L
 fun RecordRhythmDialog(
     matcher: RhythmMatcher,
     doorStyle: DoorStyle,
+    player: KnockPlayer,
     onSaved: (Rhythm) -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -61,6 +66,7 @@ fun RecordRhythmDialog(
     var message by remember { mutableStateOf("Toca tu ritmo secreto sobre la puerta (mínimo 3 toques).\nCuando termines, espera 2 segundos.") }
     var done by remember { mutableStateOf(false) }
     val view = LocalView.current
+    val photo = ImageBitmap.imageResource(doorStyle.photoRes ?: R.drawable.puerta_modelo)
 
     // Fin de la toma: 2 s sin tocar
     LaunchedEffect(taps.size) {
@@ -93,10 +99,11 @@ fun RecordRhythmDialog(
                         awaitEachGesture {
                             val down = awaitFirstDown(requireUnconsumed = false)
                             view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+                            player.tap(down.uptimeMillis)
                             taps += down.uptimeMillis
                         }
                     }
-            ) { drawDoor(doorStyle) }
+            ) { drawDoor(doorStyle, photo) }
 
             Column(
                 Modifier

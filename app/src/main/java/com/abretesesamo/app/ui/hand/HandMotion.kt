@@ -29,9 +29,20 @@ data class HandMotion(
     val slamShake: Boolean = false,
     /** La mano saluda al final. */
     val waveAtEnd: Boolean = false,
+    /** El brazo vuelve a la oscuridad al final (como en el modelo). */
+    val retractAtEnd: Boolean = false,
 ) {
     companion object {
         fun forStyle(style: HandStyle): HandMotion = when (style) {
+            HandStyle.ESQUELETO_REAL, HandStyle.GUANTE_NEGRO, HandStyle.PLUMAS, HandStyle.GARRA, HandStyle.DIVINA,
+            HandStyle.ROBOT, HandStyle.FUEGO, HandStyle.HIELO, HandStyle.MORADA, HandStyle.UNAS_ROSAS,
+            HandStyle.PULSERA, HandStyle.INFANTIL, HandStyle.GARRA_VERDE,
+            HandStyle.BRAZO_REAL -> HandMotion(
+                handSpec = tween(800, easing = FastOutSlowInEasing),
+                doorSpec = tween(1500, easing = FastOutSlowInEasing),
+                doorDelayMs = 350,
+                retractAtEnd = true,
+            )
             HandStyle.ESQUELETO -> HandMotion(
                 handSpec = tween(750, easing = FastOutSlowInEasing),
                 doorSpec = tween(900, easing = FastOutSlowInEasing),

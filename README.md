@@ -3,8 +3,8 @@
 App para Android que pone una **puerta** en tu pantalla de bloqueo. Para abrirla tocas
 sobre la puerta tu **ritmo secreto** (como cuando llamas a la puerta de un amigo).
 
-- Eliges la puerta: madera rústica, metal industrial, medieval o moderna.
-- Eliges la mano que la abre desde dentro: esqueleto, cartoon amarilla, pulsera azul anime,
+- Eliges la puerta: tu modelo de foto (ocupa toda la pantalla, borde a borde), madera rústica, metal industrial, medieval o moderna.
+- Eliges la mano que la abre desde dentro: brazo real (de tu modelo), esqueleto, cartoon amarilla, pulsera azul anime,
   monstruo verde o guante blanco. Cada una abre con su propia animación.
 - Si fallas 3 veces seguidas, la puerta toca desde dentro **la mitad de tu ritmo** como pista,
   y tú solo tienes que completar el resto.

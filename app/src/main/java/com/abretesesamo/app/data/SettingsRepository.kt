@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.core.content.edit
 import com.abretesesamo.app.model.DoorStyle
 import com.abretesesamo.app.model.HandStyle
+import com.abretesesamo.app.model.SoundMode
 import com.abretesesamo.core.rhythm.Rhythm
 import com.abretesesamo.core.rhythm.RhythmMatcher
 
@@ -35,6 +36,10 @@ class SettingsRepository(context: Context) {
         get() = HandStyle.fromId(prefs.getString(KEY_HAND, null))
         set(value) = prefs.edit { putString(KEY_HAND, value.name) }
 
+    var soundMode: SoundMode
+        get() = SoundMode.fromId(prefs.getString(KEY_SOUND, null))
+        set(value) = prefs.edit { putString(KEY_SOUND, value.name) }
+
     var lockEnabled: Boolean
         get() = prefs.getBoolean(KEY_ENABLED, false)
         set(value) = prefs.edit { putBoolean(KEY_ENABLED, value) }
@@ -47,5 +52,6 @@ class SettingsRepository(context: Context) {
         const val KEY_DOOR = "puerta"
         const val KEY_HAND = "mano"
         const val KEY_ENABLED = "activada"
+        const val KEY_SOUND = "sonido"
     }
 }

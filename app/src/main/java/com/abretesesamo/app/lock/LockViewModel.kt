@@ -22,9 +22,9 @@ import kotlinx.coroutines.launch
  * temporizador de "dejó de tocar", mensajes, sacudida de la puerta y la pista sonora.
  */
 class LockViewModel(
-    secret: Rhythm,
+    private val secret: Rhythm,
     matcher: RhythmMatcher,
-    private val player: KnockPlayer = KnockPlayer(),
+    private val player: KnockPlayer,
 ) : ViewModel() {
 
     enum class Phase { WAITING, LISTENING, WRONG, PLAYING_HINT, HINT_DONE, OPENING }
@@ -48,6 +48,7 @@ class LockViewModel(
     fun onKnock(uptimeMs: Long) {
         val phase = _state.value.phase
         if (phase == Phase.PLAYING_HINT || phase == Phase.OPENING) return
+        player.tap(uptimeMs, secret)
 
         when (val event = session.onTap(uptimeMs)) {
             is Event.TapRegistered -> {
@@ -106,6 +107,9 @@ class LockViewModel(
         }
     }
 
+    /** Rechinido de la bisagra mientras la puerta se abre. */
+    fun onDoorSwing() = player.creak()
+
     /** Vuelve a la puerta cerrada (p. ej. si el usuario canceló el PIN del sistema). */
     fun reset() {
         idleJob?.cancel()
@@ -116,15 +120,15 @@ class LockViewModel(
     }
 
     override fun onCleared() {
-        player.stop()
+        player.release()
     }
 
     companion object {
         const val FAILURES_BEFORE_HINT = 3
         private const val MSG_START = "Toca tu ritmo secreto en la puerta"
 
-        fun factory(secret: Rhythm, matcher: RhythmMatcher) = viewModelFactory {
-            initializer { LockViewModel(secret, matcher) }
+        fun factory(secret: Rhythm, matcher: RhythmMatcher, player: () -> KnockPlayer) = viewModelFactory {
+            initializer { LockViewModel(secret, matcher, player()) }
         }
     }
 }

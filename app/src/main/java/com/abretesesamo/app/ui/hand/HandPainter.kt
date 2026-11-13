@@ -38,6 +38,7 @@ fun DrawScope.drawHand(style: HandStyle, wrist: Offset, palmW: Float, rotationDe
                 HandStyle.PULSERA_ANIME -> animeBraceletHand(palmW, time)
                 HandStyle.MONSTRUO_VERDE -> greenMonsterHand(palmW)
                 HandStyle.GUANTE_BLANCO -> whiteGloveHand(palmW)
+                else -> Unit // fotos: se dibujan aparte (DoorScene / ajustes)
             }
         }
     }
