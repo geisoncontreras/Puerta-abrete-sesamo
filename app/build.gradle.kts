@@ -16,6 +16,18 @@ android {
         versionName = "0.1.0"
     }
 
+    // Firma fija para las versiones de prueba: así cada APK nuevo se instala ENCIMA del anterior
+    // (con la firma aleatoria de cada compilación, Android decía "La app no se instaló").
+    // Es solo la firma de pruebas (contraseña pública "android"), no sirve para publicar en Play.
+    signingConfigs {
+        getByName("debug") {
+            storeFile = file("puerta-debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
