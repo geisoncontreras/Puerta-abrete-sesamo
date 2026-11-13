@@ -79,7 +79,6 @@ fun SettingsScreen(settings: SettingsRepository) {
     val scope = rememberCoroutineScope()
     val player = remember { KnockPlayer(context, settings.soundMode) }
     DisposableEffect(Unit) { onDispose { player.release() } }
-    val doorPhoto = ImageBitmap.imageResource(R.drawable.puerta_modelo)
     val armPhoto = ImageBitmap.imageResource(R.drawable.brazo_real)
 
     var rhythm by remember { mutableStateOf(settings.rhythm) }
@@ -165,6 +164,7 @@ fun SettingsScreen(settings: SettingsRepository) {
             LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(vertical = 4.dp)) {
                 items(DoorStyle.entries) { style ->
                     Choice(selected = style == door, label = style.displayName, onClick = { door = style; settings.doorStyle = style }) {
+                        val doorPhoto = style.photoRes?.let { ImageBitmap.imageResource(it) }
                         Canvas(Modifier.size(width = 84.dp, height = 140.dp)) { drawDoor(style, doorPhoto) }
                     }
                 }
@@ -175,12 +175,14 @@ fun SettingsScreen(settings: SettingsRepository) {
             LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(vertical = 4.dp)) {
                 items(HandStyle.entries) { style ->
                     Choice(selected = style == hand, label = style.displayName, onClick = { hand = style; settings.handStyle = style }) {
-                        val bg = if (style == HandStyle.BRAZO_REAL) Color(0xFF050403) else Color(0xFF3A2A1C)
+                        val bg = if (style.isPhoto) Color(0xFF050403) else Color(0xFF3A2A1C)
+                        val handPhoto = style.spriteRes?.let { ImageBitmap.imageResource(it) } ?: armPhoto
                         Canvas(Modifier.size(width = 96.dp, height = 140.dp).clip(RoundedCornerShape(10.dp)).background(bg)) {
-                            if (style == HandStyle.BRAZO_REAL) {
-                                val aw = size.width * 0.95f
-                                val ah = aw * armPhoto.height / armPhoto.width
-                                drawImage(armPhoto, dstOffset = IntOffset(0, ((size.height - ah) / 2).toInt()), dstSize = IntSize(aw.toInt(), ah.toInt()))
+                            if (style.isPhoto) {
+                                val sc = minOf(size.width * 0.95f / handPhoto.width, size.height * 0.9f / handPhoto.height)
+                                val aw = handPhoto.width * sc
+                                val ah = handPhoto.height * sc
+                                drawImage(handPhoto, dstOffset = IntOffset(((size.width - aw) / 2).toInt(), ((size.height - ah) / 2).toInt()), dstSize = IntSize(aw.toInt(), ah.toInt()))
                             } else {
                                 drawHand(style, Offset(size.width / 2, size.height * 0.72f), palmW = size.width * 0.42f, rotationDeg = 0f, time = 0.3f)
                             }

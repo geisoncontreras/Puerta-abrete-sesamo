@@ -103,7 +103,9 @@ fun DoorScene(
     val rippleId = remember { mutableLongStateOf(0L) }
     val motion = remember(handStyle) { HandMotion.forStyle(handStyle) }
 
-    val photo = ImageBitmap.imageResource(R.drawable.puerta_modelo)
+    val photo = ImageBitmap.imageResource(doorStyle.photoRes ?: R.drawable.puerta_modelo)
+    val interior = doorStyle.interiorRes?.let { ImageBitmap.imageResource(it) }
+    val sprite = handStyle.spriteRes?.let { ImageBitmap.imageResource(it) }
     val arm = ImageBitmap.imageResource(R.drawable.brazo_real)
     val armOpen = ImageBitmap.imageResource(R.drawable.mano_abierta)
     // Las puertas dibujadas se pasan a imagen una vez, para poder deformarlas con perspectiva.
@@ -128,7 +130,7 @@ fun DoorScene(
             releaseTip.value = null
             return@LaunchedEffect
         }
-        if (handStyle == HandStyle.BRAZO_REAL) {
+        if (handStyle.isPhoto) {
             // Igual que el modelo: puño que empuja → abre la mano → se retira a la oscuridad
             // mientras la puerta sigue abriéndose sola por el empujón.
             // Un solo movimiento continuo: arranca suave con el empujón y frena por inercia.
@@ -194,7 +196,11 @@ fun DoorScene(
             val p = door.value
 
             // 1. Interior
-            if (doorStyle == DoorStyle.FOTO_MODELO) {
+            if (interior != null) {
+                // Lo que hay detrás de esta puerta en el diseño de Geison (cielo, fuego, galaxia…)
+                drawImage(interior, dstSize = IntSize(w.toInt(), h.toInt()))
+                drawRect(Color.Black.copy(alpha = (1f - p * 1.6f).coerceIn(0f, 1f)))
+            } else if (doorStyle == DoorStyle.FOTO_MODELO) {
                 drawRect(Brush.radialGradient(listOf(Color(0xFF1C1712), Color(0xFF050403)), center = Offset(w * 0.4f, h * 0.45f), radius = h * 0.7f))
             } else {
                 drawRect(
@@ -208,7 +214,7 @@ fun DoorScene(
             }
 
             // 2. Brazo real, detrás de la hoja
-            if (handStyle == HandStyle.BRAZO_REAL && hand.value > 0f) {
+            if (handStyle.isPhoto && hand.value > 0f) {
                 // Los dos recortes (puño y mano abierta) a la misma escala que en el modelo.
                 val k = h * 0.0016f
                 val baseTop = h * 0.5f - 0.8f * 135f * k
@@ -230,12 +236,21 @@ fun DoorScene(
                         alpha = alpha.coerceIn(0f, 1f),
                     )
                 }
-                place(arm, 114f * k, 135f * k, 0f, a * (1f - openHand.value))
-                place(armOpen, 128f * k, 155f * k, 5f * k, a * openHand.value)
+                if (sprite != null) {
+                    // Mismo tamaño que en las imágenes de Geison (allí la puerta medía ~300 px),
+                    // agarrando a la altura del pomo.
+                    val sc = w / 300f
+                    val sw = handStyle.srcW * sc
+                    val sh = handStyle.srcH * sc
+                    place(sprite, sw, sh, h * 0.52f - handStyle.grip * sh - baseTop, a)
+                } else {
+                    place(arm, 114f * k, 135f * k, 0f, a * (1f - openHand.value))
+                    place(armOpen, 128f * k, 155f * k, 5f * k, a * openHand.value)
+                }
             }
 
             // 3. Hoja de la puerta
-            val source: ImageBitmap = if (doorStyle == DoorStyle.FOTO_MODELO) {
+            val source: ImageBitmap = if (doorStyle.isPhoto) {
                 photo
             } else {
                 val key = IntSize((w / 2).toInt().coerceAtLeast(1), (h / 2).toInt().coerceAtLeast(1))
@@ -246,7 +261,7 @@ fun DoorScene(
             drawDoorLeaf(source, p, shake)
 
             // 5. Manos dibujadas, reflejadas para salir por la izquierda (donde se abre el hueco)
-            if (handStyle != HandStyle.BRAZO_REAL && hand.value > 0f) {
+            if (!handStyle.isPhoto && hand.value > 0f) {
                 val hp = hand.value
                 val scale = 0.55f + 0.45f * hp
                 val t = clock.floatValue

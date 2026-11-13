@@ -28,7 +28,7 @@ import kotlin.random.Random
  * Todas tienen las bisagras a la derecha, como el modelo: las dibujadas se reflejan.
  */
 fun DrawScope.drawDoor(style: DoorStyle, photo: ImageBitmap? = null) {
-    if (style == DoorStyle.FOTO_MODELO) {
+    if (style.isPhoto) {
         if (photo != null) {
             drawImage(photo, dstSize = IntSize(size.width.toInt(), size.height.toInt()))
         } else {
@@ -42,18 +42,18 @@ fun DrawScope.drawDoor(style: DoorStyle, photo: ImageBitmap? = null) {
             DoorStyle.METAL_INDUSTRIAL -> drawIndustrialMetal()
             DoorStyle.MEDIEVAL -> drawMedieval()
             DoorStyle.MODERNA -> drawModern()
-            DoorStyle.FOTO_MODELO -> Unit
+            else -> Unit
         }
     }
 }
 
 /** Color de la pared/marco alrededor de cada puerta. */
 fun DoorStyle.wallColor(): Color = when (this) {
-    DoorStyle.FOTO_MODELO -> Color(0xFF6E7B6A)
     DoorStyle.MADERA_RUSTICA -> Color(0xFF3B2414)
     DoorStyle.METAL_INDUSTRIAL -> Color(0xFF4A4F55)
     DoorStyle.MEDIEVAL -> Color(0xFF6B655C)
     DoorStyle.MODERNA -> Color(0xFFD9D4CC)
+    else -> Color(0xFF6E7B6A)
 }
 
 /** Forma de la puerta medieval: rectángulo con arco de medio punto arriba. */

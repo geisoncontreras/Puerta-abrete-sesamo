@@ -34,6 +34,8 @@ data class HandMotion(
 ) {
     companion object {
         fun forStyle(style: HandStyle): HandMotion = when (style) {
+            HandStyle.ESQUELETO_REAL, HandStyle.GUANTE_NEGRO, HandStyle.PLUMAS, HandStyle.GARRA, HandStyle.DIVINA,
+            HandStyle.ROBOT, HandStyle.FUEGO, HandStyle.HIELO,
             HandStyle.BRAZO_REAL -> HandMotion(
                 handSpec = tween(800, easing = FastOutSlowInEasing),
                 doorSpec = tween(1500, easing = FastOutSlowInEasing),

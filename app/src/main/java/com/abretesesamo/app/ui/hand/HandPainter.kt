@@ -33,12 +33,12 @@ fun DrawScope.drawHand(style: HandStyle, wrist: Offset, palmW: Float, rotationDe
     translate(wrist.x, wrist.y) {
         rotate(rotationDeg, pivot = Offset.Zero) {
             when (style) {
-                HandStyle.BRAZO_REAL -> Unit // es una foto: se dibuja aparte (DoorScene / ajustes)
                 HandStyle.ESQUELETO -> skeletonHand(palmW)
                 HandStyle.CARTOON_AMARILLA -> cartoonYellowHand(palmW)
                 HandStyle.PULSERA_ANIME -> animeBraceletHand(palmW, time)
                 HandStyle.MONSTRUO_VERDE -> greenMonsterHand(palmW)
                 HandStyle.GUANTE_BLANCO -> whiteGloveHand(palmW)
+                else -> Unit // fotos: se dibujan aparte (DoorScene / ajustes)
             }
         }
     }

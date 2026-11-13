@@ -66,7 +66,7 @@ fun RecordRhythmDialog(
     var message by remember { mutableStateOf("Toca tu ritmo secreto sobre la puerta (mínimo 3 toques).\nCuando termines, espera 2 segundos.") }
     var done by remember { mutableStateOf(false) }
     val view = LocalView.current
-    val photo = ImageBitmap.imageResource(R.drawable.puerta_modelo)
+    val photo = ImageBitmap.imageResource(doorStyle.photoRes ?: R.drawable.puerta_modelo)
 
     // Fin de la toma: 2 s sin tocar
     LaunchedEffect(taps.size) {
