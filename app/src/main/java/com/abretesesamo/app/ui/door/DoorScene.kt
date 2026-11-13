@@ -28,6 +28,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Canvas as ComposeCanvas
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.asAndroidBitmap
@@ -258,7 +259,7 @@ fun DoorScene(
                     ?: renderDoor(doorStyle, key, density, layoutDirection).also { doorBitmap.value = key to it }
             }
             val shake = shakeOffset(doorShake.value) * w * 0.03f
-            drawDoorLeaf(source, p, shake)
+            drawDoorLeaf(source, p, shake, Color(doorStyle.edgeColor))
 
             // 5. Manos dibujadas, reflejadas para salir por la izquierda (donde se abre el hueco)
             if (!handStyle.isPhoto && hand.value > 0f) {
@@ -324,7 +325,7 @@ private fun backEdge(p: Float, w: Float, h: Float): Triple<Float, Float, Float> 
 private fun armTargetX(p: Float, w: Float): Float = backEdge(p, w, 1f).first - w * 0.008f
 
 /** Dibuja la imagen de la hoja deformada en perspectiva y la oscurece al girar. */
-private fun DrawScope.drawDoorLeaf(image: ImageBitmap, p: Float, shakeX: Float) {
+private fun DrawScope.drawDoorLeaf(image: ImageBitmap, p: Float, shakeX: Float, edge: Color) {
     val w = size.width
     val h = size.height
     val (ex, top, bottom) = freeEdge(p, w, h)
@@ -336,7 +337,7 @@ private fun DrawScope.drawDoorLeaf(image: ImageBitmap, p: Float, shakeX: Float) 
         val canto = Path().apply {
             moveTo(ex + shakeX, top); lineTo(ex + shakeX, bottom); lineTo(bx + shakeX, bbottom); lineTo(bx + shakeX, btop); close()
         }
-        drawPath(canto, Brush.horizontalGradient(listOf(Color(0xFF8E6E46), Color(0xFFB8935F), Color(0xFFA9844F)), startX = bx + shakeX, endX = ex + shakeX))
+        drawPath(canto, Brush.horizontalGradient(listOf(lerp(edge, Color.Black, 0.25f), lerp(edge, Color.White, 0.12f), lerp(edge, Color.Black, 0.1f)), startX = bx + shakeX, endX = ex + shakeX))
         drawPath(canto, Color.Black.copy(alpha = 0.35f - 0.25f * p))
     }
     val bmp = image.asAndroidBitmap()

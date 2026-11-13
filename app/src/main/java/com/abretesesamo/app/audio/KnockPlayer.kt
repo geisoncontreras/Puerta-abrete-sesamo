@@ -30,12 +30,17 @@ import kotlin.random.Random
  */
 class KnockPlayer(context: Context, var mode: SoundMode = SoundMode.MEZCLA) {
 
-    private enum class Kind { PUNO, NUDILLO }
+    private enum class Kind { PUNO, NUDILLO, PUNO_METAL, NUDILLO_METAL }
+
+    /** Puerta de metal: golpes sobre chapa de acero y bisagra con resonancia metálica. */
+    var metal: Boolean = false
 
     private val res = context.applicationContext.resources
     private val samples: Map<Kind, List<ShortArray>> = mapOf(
         Kind.PUNO to PUNO.map { readWav(it) },
         Kind.NUDILLO to NUDILLO.map { readWav(it) },
+        Kind.PUNO_METAL to PUNO_METAL.map { readWav(it) },
+        Kind.NUDILLO_METAL to NUDILLO_METAL.map { readWav(it) },
     )
 
     private val pool: SoundPool = SoundPool.Builder()
@@ -50,9 +55,12 @@ class KnockPlayer(context: Context, var mode: SoundMode = SoundMode.MEZCLA) {
     private val poolIds: Map<Kind, List<Int>> = mapOf(
         Kind.PUNO to PUNO.map { pool.load(context.applicationContext, it, 1) },
         Kind.NUDILLO to NUDILLO.map { pool.load(context.applicationContext, it, 1) },
+        Kind.PUNO_METAL to PUNO_METAL.map { pool.load(context.applicationContext, it, 1) },
+        Kind.NUDILLO_METAL to NUDILLO_METAL.map { pool.load(context.applicationContext, it, 1) },
     )
 
     private val creakIds: List<Int> = listOf(R.raw.rechinido_1, R.raw.rechinido_2).map { pool.load(context.applicationContext, it, 1) }
+    private val metalCreakIds: List<Int> = listOf(R.raw.rechinido_metal_1, R.raw.rechinido_metal_2).map { pool.load(context.applicationContext, it, 1) }
 
     private val lastPick = mutableMapOf<Kind, Int>()
     private var lastTapAt = 0L
@@ -65,14 +73,14 @@ class KnockPlayer(context: Context, var mode: SoundMode = SoundMode.MEZCLA) {
     fun tap(uptimeMs: Long, secret: Rhythm? = null) {
         val gap = if (lastTapAt == 0L) null else uptimeMs - lastTapAt
         lastTapAt = uptimeMs
-        val kind = kindFor(gap, secret?.let { median(it.intervalsMs) } ?: 400L)
+        val kind = kindFor(gap, secret?.let { median(it.intervalsMs) } ?: 400L).forDoor()
         val ids = poolIds.getValue(kind)
         pool.play(ids[pick(kind, ids.size)], 1f, 1f, 1, 0, 0.97f + Random.nextFloat() * 0.06f)
     }
 
     /** Rechinido de bisagra (grabaciones de Geison, una al azar) mientras la hoja gira. */
     fun creak() {
-        pool.play(creakIds.random(), 0.9f, 0.9f, 2, 0, 0.97f + Random.nextFloat() * 0.06f)
+        pool.play((if (metal) metalCreakIds else creakIds).random(), 0.9f, 0.9f, 2, 0, 0.97f + Random.nextFloat() * 0.06f)
     }
 
     /** Un solo toque de muestra (al elegir el sonido en los ajustes). */
@@ -92,7 +100,7 @@ class KnockPlayer(context: Context, var mode: SoundMode = SoundMode.MEZCLA) {
         val offsets = rhythm.knockOffsetsMs()
         val typical = median(rhythm.intervalsMs)
         val chosen = offsets.indices.map { i ->
-            val kind = kindFor(if (i == 0) null else rhythm.intervalsMs[i - 1], typical)
+            val kind = kindFor(if (i == 0) null else rhythm.intervalsMs[i - 1], typical).forDoor()
             val bank = samples.getValue(kind)
             bank[pick(kind, bank.size)]
         }
@@ -152,6 +160,12 @@ class KnockPlayer(context: Context, var mode: SoundMode = SoundMode.MEZCLA) {
         pool.release()
     }
 
+    private fun Kind.forDoor(): Kind = if (!metal) this else when (this) {
+        Kind.PUNO -> Kind.PUNO_METAL
+        Kind.NUDILLO -> Kind.NUDILLO_METAL
+        else -> this
+    }
+
     private fun kindFor(gapMs: Long?, typicalMs: Long): Kind = when (mode) {
         SoundMode.PUNO -> Kind.PUNO
         SoundMode.NUDILLO -> Kind.NUDILLO
@@ -199,6 +213,11 @@ class KnockPlayer(context: Context, var mode: SoundMode = SoundMode.MEZCLA) {
 
     private companion object {
         const val SAMPLE_RATE = 44_100
+        val PUNO_METAL = listOf(R.raw.puno_metal_1, R.raw.puno_metal_2, R.raw.puno_metal_3, R.raw.puno_metal_4)
+        val NUDILLO_METAL = listOf(
+            R.raw.nudillo_metal_1, R.raw.nudillo_metal_2, R.raw.nudillo_metal_3,
+            R.raw.nudillo_metal_4, R.raw.nudillo_metal_5, R.raw.nudillo_metal_6,
+        )
         val PUNO = listOf(R.raw.puno_1, R.raw.puno_2, R.raw.puno_3, R.raw.puno_4, R.raw.puno_5)
         val NUDILLO = listOf(
             R.raw.nudillo_1, R.raw.nudillo_2, R.raw.nudillo_3, R.raw.nudillo_4, R.raw.nudillo_5,

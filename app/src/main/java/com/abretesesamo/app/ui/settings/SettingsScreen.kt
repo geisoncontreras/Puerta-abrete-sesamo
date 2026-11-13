@@ -77,7 +77,7 @@ import kotlinx.coroutines.launch
 fun SettingsScreen(settings: SettingsRepository) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val player = remember { KnockPlayer(context, settings.soundMode) }
+    val player = remember { KnockPlayer(context, settings.soundMode).apply { metal = settings.doorStyle.isMetal } }
     DisposableEffect(Unit) { onDispose { player.release() } }
     val armPhoto = ImageBitmap.imageResource(R.drawable.brazo_real)
 
@@ -163,7 +163,7 @@ fun SettingsScreen(settings: SettingsRepository) {
         Section("3. Elige tu puerta") {
             LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(vertical = 4.dp)) {
                 items(DoorStyle.entries) { style ->
-                    Choice(selected = style == door, label = style.displayName, onClick = { door = style; settings.doorStyle = style }) {
+                    Choice(selected = style == door, label = style.displayName, onClick = { door = style; settings.doorStyle = style; player.metal = style.isMetal }) {
                         val doorPhoto = style.photoRes?.let { ImageBitmap.imageResource(it) }
                         Canvas(Modifier.size(width = 84.dp, height = 140.dp)) { drawDoor(style, doorPhoto) }
                     }

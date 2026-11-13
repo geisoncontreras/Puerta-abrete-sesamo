@@ -43,7 +43,7 @@ class LockActivity : ComponentActivity() {
             finish()
             return
         }
-        viewModel = ViewModelProvider(this, LockViewModel.factory(rhythm, settings.matcher(), { KnockPlayer(applicationContext, settings.soundMode) }))[LockViewModel::class.java]
+        viewModel = ViewModelProvider(this, LockViewModel.factory(rhythm, settings.matcher(), { KnockPlayer(applicationContext, settings.soundMode).apply { metal = settings.doorStyle.isMetal } }))[LockViewModel::class.java]
 
         // El botón "atrás" no abre la puerta (en modo prueba sí sale).
         onBackPressedDispatcher.addCallback(this) { if (testMode) finish() }
