@@ -36,6 +36,24 @@ enum class DoorStyle(
 
     val isPhoto: Boolean get() = photoRes != null
 
+    /** Las puertas de metal suenan a chapa de acero (toques y bisagra). */
+    val isMetal: Boolean get() = this == METAL_LUZ || this == METAL_OSCURO || this == METAL_INDUSTRIAL
+
+    /** Color del canto (grosor) de la hoja. */
+    val edgeColor: Long get() = when (this) {
+        HUESOS -> 0xFFCDBFA3
+        ANGELES_CIELO, ANGELES_NOCHE -> 0xFFB8902F
+        LAVA_FUEGO, LAVA_BRASAS -> 0xFF2B231F
+        HIELO -> 0xFFCFE4F2
+        GALAXIA, COPOS -> 0xFF4A4A57
+        ROJA_LUZ -> 0xFF8C1414
+        ROJA_OSCURA -> 0xFF6E1010
+        METAL_LUZ, METAL_INDUSTRIAL -> 0xFF8D9196
+        METAL_OSCURO -> 0xFF6F7378
+        BLANCA, BLANCA_DORADA, MODERNA -> 0xFFE8E4DC
+        else -> 0xFFB8935F
+    }
+
     companion object {
         fun fromId(id: String?): DoorStyle = entries.firstOrNull { it.name == id } ?: FOTO_MODELO
     }
