@@ -59,7 +59,8 @@ import kotlin.math.min
 import kotlin.math.sin
 
 /** Ángulo máximo de apertura de la hoja (grados). */
-private const val DOOR_MAX_ANGLE = 70f
+/** Se abre del todo: pasado ~80° la hoja sale de la pantalla y queda el hueco libre. */
+private const val DOOR_MAX_ANGLE = 92f
 /** Distancia de la "cámara", en anchos de puerta. */
 private const val CAMERA_DISTANCE = 2.2f
 
@@ -130,12 +131,12 @@ fun DoorScene(
             // mientras la puerta sigue abriéndose sola por el empujón.
             // Un solo movimiento continuo: arranca suave con el empujón y frena por inercia.
             coroutineScope {
-                val doorJob = launch { door.animateTo(1f, tween(2000, easing = CubicBezierEasing(0.32f, 0f, 0.2f, 1f))) }
+                val doorJob = launch { door.animateTo(1f, tween(2600, easing = CubicBezierEasing(0.32f, 0f, 0.2f, 1f))) }
                 delay(80)
                 launch { hand.animateTo(1f, tween(420, easing = FastOutSlowInEasing)) }   // asoma el puño
-                snapshotFlow { door.value }.first { it >= 0.66f }
+                snapshotFlow { door.value }.first { it >= 0.5f }
                 launch { openHand.animateTo(1f, tween(180)) }                            // abre la mano
-                snapshotFlow { door.value }.first { it >= 0.74f }
+                snapshotFlow { door.value }.first { it >= 0.565f }
                 releaseTip.value = Float.NaN                                             // suelta
                 retract.animateTo(1f, tween(600, easing = FastOutSlowInEasing))         // el brazo se va
                 doorJob.join()
@@ -146,10 +147,10 @@ fun DoorScene(
         }
         coroutineScope {
             repeat(motion.preRattles) {
-                door.animateTo(0.035f, tween(70))
+                door.animateTo(0.027f, tween(70))
                 door.animateTo(0f, tween(90))
             }
-            door.animateTo(0.1f, tween(220, easing = FastOutSlowInEasing)) // se entreabre
+            door.animateTo(0.076f, tween(220, easing = FastOutSlowInEasing)) // se entreabre
             val handJob = launch { hand.animateTo(1f, motion.handSpec) }    // aparece la mano
             delay(motion.doorDelayMs)
             door.animateTo(1f, motion.doorSpec)                              // empuja hasta abrir
@@ -308,6 +309,8 @@ private fun DrawScope.drawDoorLeaf(image: ImageBitmap, p: Float, shakeX: Float) 
     val w = size.width
     val h = size.height
     val (ex, top, bottom) = freeEdge(p, w, h)
+    // Abierta del todo: la hoja ya está fuera de la pantalla (o de canto), no hay nada que pintar.
+    if (ex >= w - 1f) return
     // Canto (grosor de la puerta): franja entre el borde de la cara y el de atrás.
     if (p > 0f) {
         val (bx, btop, bbottom) = backEdge(p, w, h)

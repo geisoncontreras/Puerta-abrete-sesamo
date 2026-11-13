@@ -65,7 +65,7 @@ class KnockPlayer(context: Context, var mode: SoundMode = SoundMode.MEZCLA) {
         lastTapAt = uptimeMs
         val kind = kindFor(gap, secret?.let { median(it.intervalsMs) } ?: 400L)
         val ids = poolIds.getValue(kind)
-        pool.play(ids[pick(kind, ids.size)], 0.9f, 0.9f, 1, 0, 0.97f + Random.nextFloat() * 0.06f)
+        pool.play(ids[pick(kind, ids.size)], 1f, 1f, 1, 0, 0.97f + Random.nextFloat() * 0.06f)
     }
 
     /** Un solo toque de muestra (al elegir el sonido en los ajustes). */
