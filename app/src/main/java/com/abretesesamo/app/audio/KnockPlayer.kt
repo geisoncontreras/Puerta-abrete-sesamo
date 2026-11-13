@@ -52,6 +52,8 @@ class KnockPlayer(context: Context, var mode: SoundMode = SoundMode.MEZCLA) {
         Kind.NUDILLO to NUDILLO.map { pool.load(context.applicationContext, it, 1) },
     )
 
+    private val creakId: Int = pool.load(context.applicationContext, R.raw.rechinido, 1)
+
     private val lastPick = mutableMapOf<Kind, Int>()
     private var lastTapAt = 0L
     private var track: AudioTrack? = null
@@ -66,6 +68,11 @@ class KnockPlayer(context: Context, var mode: SoundMode = SoundMode.MEZCLA) {
         val kind = kindFor(gap, secret?.let { median(it.intervalsMs) } ?: 400L)
         val ids = poolIds.getValue(kind)
         pool.play(ids[pick(kind, ids.size)], 1f, 1f, 1, 0, 0.97f + Random.nextFloat() * 0.06f)
+    }
+
+    /** Rechinido de bisagra (sonido creado para la app) mientras la hoja gira. */
+    fun creak() {
+        pool.play(creakId, 0.75f, 0.75f, 2, 0, 0.97f + Random.nextFloat() * 0.06f)
     }
 
     /** Un solo toque de muestra (al elegir el sonido en los ajustes). */

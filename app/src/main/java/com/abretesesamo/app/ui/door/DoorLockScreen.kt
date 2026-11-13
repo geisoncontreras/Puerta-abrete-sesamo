@@ -60,6 +60,7 @@ fun DoorLockScreen(
                 viewModel.onKnock(t)
             },
             onOpenFinished = onDoorOpened,
+            onDoorSwing = viewModel::onDoorSwing,
         )
 
         Text(

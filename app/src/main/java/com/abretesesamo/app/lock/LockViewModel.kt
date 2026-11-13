@@ -107,6 +107,9 @@ class LockViewModel(
         }
     }
 
+    /** Rechinido de la bisagra mientras la puerta se abre. */
+    fun onDoorSwing() = player.creak()
+
     /** Vuelve a la puerta cerrada (p. ej. si el usuario canceló el PIN del sistema). */
     fun reset() {
         idleJob?.cancel()

@@ -87,6 +87,8 @@ fun DoorScene(
     onOpenFinished: () -> Unit,
     modifier: Modifier = Modifier,
     knockEnabled: Boolean = true,
+    /** La hoja empieza a girar: aquí suena el rechinido de la bisagra. */
+    onDoorSwing: () -> Unit = {},
 ) {
     val door = remember { Animatable(0f) }       // 0 cerrada · 1 abierta
     val hand = remember { Animatable(0f) }       // 0 oculta · 1 empujando
@@ -131,6 +133,7 @@ fun DoorScene(
             // mientras la puerta sigue abriéndose sola por el empujón.
             // Un solo movimiento continuo: arranca suave con el empujón y frena por inercia.
             coroutineScope {
+                onDoorSwing()
                 val doorJob = launch { door.animateTo(1f, tween(2600, easing = CubicBezierEasing(0.32f, 0f, 0.2f, 1f))) }
                 delay(80)
                 launch { hand.animateTo(1f, tween(420, easing = FastOutSlowInEasing)) }   // asoma el puño
@@ -153,6 +156,7 @@ fun DoorScene(
             door.animateTo(0.076f, tween(220, easing = FastOutSlowInEasing)) // se entreabre
             val handJob = launch { hand.animateTo(1f, motion.handSpec) }    // aparece la mano
             delay(motion.doorDelayMs)
+            onDoorSwing()
             door.animateTo(1f, motion.doorSpec)                              // empuja hasta abrir
             if (motion.slamShake) {
                 sceneShake.snapTo(0f)
