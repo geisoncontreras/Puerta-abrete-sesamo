@@ -161,6 +161,10 @@ fun SettingsScreen(settings: SettingsRepository) {
         }
 
         Section("3. Elige tu puerta") {
+            Text(
+                "El fondo detrás de la puerta cambia solo: claro de día (7:00 a 19:00) y oscuro de noche.",
+                fontSize = 13.sp,
+            )
             LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(vertical = 4.dp)) {
                 items(DoorStyle.entries) { style ->
                     Choice(selected = style == door, label = style.displayName, onClick = { door = style; settings.doorStyle = style; player.metal = style.isMetal }) {

@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
 import com.abretesesamo.app.R
 import com.abretesesamo.app.model.DoorStyle
+import com.abretesesamo.app.model.interiorNow
 import com.abretesesamo.app.model.HandStyle
 import com.abretesesamo.app.ui.hand.HandMotion
 import com.abretesesamo.app.ui.hand.drawHand
@@ -105,7 +106,9 @@ fun DoorScene(
     val motion = remember(handStyle) { HandMotion.forStyle(handStyle) }
 
     val photo = ImageBitmap.imageResource(doorStyle.photoRes ?: R.drawable.puerta_modelo)
-    val interior = doorStyle.interiorRes?.let { ImageBitmap.imageResource(it) }
+    // Fondo automático: claro de día, oscuro de noche (se decide al mostrar la puerta).
+    val isDay = remember { DoorStyle.isDayNow() }
+    val interior = doorStyle.interiorNow(isDay)?.let { ImageBitmap.imageResource(it) }
     val sprite = handStyle.spriteRes?.let { ImageBitmap.imageResource(it) }
     val arm = ImageBitmap.imageResource(R.drawable.brazo_real)
     val armOpen = ImageBitmap.imageResource(R.drawable.mano_abierta)
@@ -201,7 +204,7 @@ fun DoorScene(
                 // Lo que hay detrás de esta puerta en el diseño de Geison (cielo, fuego, galaxia…)
                 drawImage(interior, dstSize = IntSize(w.toInt(), h.toInt()))
                 drawRect(Color.Black.copy(alpha = (1f - p * 1.6f).coerceIn(0f, 1f)))
-            } else if (doorStyle == DoorStyle.FOTO_MODELO) {
+            } else if (doorStyle == DoorStyle.FOTO_MODELO || !isDay) {
                 drawRect(Brush.radialGradient(listOf(Color(0xFF1C1712), Color(0xFF050403)), center = Offset(w * 0.4f, h * 0.45f), radius = h * 0.7f))
             } else {
                 drawRect(
