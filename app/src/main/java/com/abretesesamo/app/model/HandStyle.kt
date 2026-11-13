@@ -7,7 +7,6 @@ import com.abretesesamo.app.R
  * Manos. Las de foto ([spriteRes]) están recortadas de las imágenes de Geison:
  * [srcW]/[srcH] es su tamaño en esas imágenes (donde la puerta medía ~300 px de ancho)
  * y [grip] la altura del agarre dentro del recorte (0 arriba, 1 abajo).
- * Las dibujadas tienen su forma de abrir en ui/hand/HandMotion.kt.
  */
 enum class HandStyle(
     val displayName: String,
@@ -30,17 +29,13 @@ enum class HandStyle(
     UNAS_ROSAS("Uñas rosadas", "Una mano con las uñas pintadas", R.drawable.mano_unas_rosas, 141f, 179f, 0.682f),
     PULSERA("Con pulsera", "Una mano con pulsera dorada", R.drawable.mano_pulsera, 118f, 160f, 0.806f),
     INFANTIL("Mano pequeña", "Una mano pequeña y suave", R.drawable.mano_infantil, 106f, 155f, 0.761f),
-    GARRA_VERDE("Garra verde", "Una garra de monstruo verde con anillo", R.drawable.mano_garra_verde, 214f, 152f, 0.419f),
-    ESQUELETO("Esqueleto", "Huesos que tiemblan al empujar"),
-    CARTOON_AMARILLA("Cartoon amarilla", "Rebota como un dibujo animado"),
-    PULSERA_ANIME("Pulsera azul anime", "Aparece con un aura de energía"),
-    MONSTRUO_VERDE("Monstruo verde", "Abre de un golpe y todo tiembla"),
-    GUANTE_BLANCO("Guante blanco", "Empuja con elegancia y saluda");
+    GARRA_VERDE("Garra verde", "Una garra de monstruo verde con anillo", R.drawable.mano_garra_verde, 214f, 152f, 0.419f);
 
     /** Brazos de foto: salen de la oscuridad, empujan, sueltan y la puerta sigue sola. */
     val isPhoto: Boolean get() = this == BRAZO_REAL || spriteRes != null
 
     companion object {
+        /** Las manos dibujadas que se quitaron (Esqueleto, Cartoon...) vuelven al brazo real. */
         fun fromId(id: String?): HandStyle = entries.firstOrNull { it.name == id } ?: BRAZO_REAL
     }
 }

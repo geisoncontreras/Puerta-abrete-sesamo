@@ -31,6 +31,12 @@ class LockActivity : ComponentActivity() {
     private lateinit var viewModel: LockViewModel
     private var testMode = false
 
+    /** Ajustes con los que se armó esta pantalla; si cambian, se rehace con los nuevos. */
+    private var loadedSettings: String? = null
+
+    private fun settingsSignature(s: SettingsRepository) =
+        listOf(s.rhythm?.serialize(), s.doorStyle.name, s.handStyle.name, s.soundMode.name, s.matcher().tolerance).joinToString("|")
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         testMode = intent.getBooleanExtra(EXTRA_TEST, false)
@@ -43,6 +49,7 @@ class LockActivity : ComponentActivity() {
             finish()
             return
         }
+        loadedSettings = settingsSignature(settings)
         viewModel = ViewModelProvider(this, LockViewModel.factory(rhythm, settings.matcher(), { KnockPlayer(applicationContext, settings.soundMode).apply { metal = settings.doorStyle.isMetal } }))[LockViewModel::class.java]
 
         // El botón "atrás" no abre la puerta (en modo prueba sí sale).
@@ -68,6 +75,13 @@ class LockActivity : ComponentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         testMode = intent.getBooleanExtra(EXTRA_TEST, false)
+        // Si se grabó un ritmo nuevo (o cambió la puerta/sonido) desde la última vez,
+        // la pantalla vieja seguiría usando el ritmo antiguo: se rehace desde cero.
+        if (settingsSignature(SettingsRepository(this)) != loadedSettings) {
+            viewModelStore.clear()
+            recreate()
+            return
+        }
         if (::viewModel.isInitialized) viewModel.reset()
     }
 

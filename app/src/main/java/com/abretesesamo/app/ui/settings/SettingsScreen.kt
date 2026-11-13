@@ -70,7 +70,6 @@ import com.abretesesamo.app.model.DoorStyle
 import com.abretesesamo.app.model.HandStyle
 import com.abretesesamo.app.model.SoundMode
 import com.abretesesamo.app.ui.door.drawDoor
-import com.abretesesamo.app.ui.hand.drawHand
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -143,7 +142,7 @@ fun SettingsScreen(settings: SettingsRepository) {
         }
 
         Section("Sonido de los toques") {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 SoundMode.entries.forEach { mode ->
                     FilterChip(
                         selected = mode == sound,
@@ -155,7 +154,7 @@ fun SettingsScreen(settings: SettingsRepository) {
                     )
                 }
             }
-            Text("Son grabaciones reales, golpe a golpe. En «Mezcla natural» el primer toque tras una pausa suena fuerte (puño) y los rápidos con nudillos.", fontSize = 13.sp)
+            Text("Toca uno para escucharlo. El primer toque tras una pausa suena fuerte y los rápidos más suaves (menos en «Puño» y «Nudillos»).", fontSize = 13.sp)
             rhythm?.let { r ->
                 OutlinedButton(onClick = { scope.launch { player.play(r) } }) { Text("Probar con mi ritmo") }
             }
@@ -183,13 +182,11 @@ fun SettingsScreen(settings: SettingsRepository) {
                         val bg = if (style.isPhoto) Color(0xFF050403) else Color(0xFF3A2A1C)
                         val handPhoto = style.spriteRes?.let { ImageBitmap.imageResource(it) } ?: armPhoto
                         Canvas(Modifier.size(width = 74.dp, height = 116.dp).clip(RoundedCornerShape(10.dp)).background(bg)) {
-                            if (style.isPhoto) {
+                            run {
                                 val sc = minOf(size.width * 0.95f / handPhoto.width, size.height * 0.9f / handPhoto.height)
                                 val aw = handPhoto.width * sc
                                 val ah = handPhoto.height * sc
                                 drawImage(handPhoto, dstOffset = IntOffset(((size.width - aw) / 2).toInt(), ((size.height - ah) / 2).toInt()), dstSize = IntSize(aw.toInt(), ah.toInt()))
-                            } else {
-                                drawHand(style, Offset(size.width / 2, size.height * 0.72f), palmW = size.width * 0.42f, rotationDeg = 0f, time = 0.3f)
                             }
                         }
                     }

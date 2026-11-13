@@ -66,9 +66,10 @@ class LockViewModel(
     private fun restartIdleTimer() {
         idleJob?.cancel()
         idleJob = viewModelScope.launch {
-            delay(session.idleTimeoutMs)
+            delay(session.nextCheckDelayMs())
             when (val event = session.onIdle()) {
                 is Event.Failed -> onFailed(event)
+                Event.Unlocked -> _state.update { it.copy(phase = Phase.OPENING, message = "¡Ábrete, sésamo!") }
                 else -> Unit
             }
         }

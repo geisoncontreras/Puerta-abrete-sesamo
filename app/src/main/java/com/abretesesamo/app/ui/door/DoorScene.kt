@@ -50,7 +50,6 @@ import com.abretesesamo.app.model.DoorStyle
 import com.abretesesamo.app.model.interiorNow
 import com.abretesesamo.app.model.HandStyle
 import com.abretesesamo.app.ui.hand.HandMotion
-import com.abretesesamo.app.ui.hand.drawHand
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
@@ -263,25 +262,6 @@ fun DoorScene(
             }
             val shake = shakeOffset(doorShake.value) * w * 0.03f
             drawDoorLeaf(source, p, shake, Color(doorStyle.edgeColor))
-
-            // 5. Manos dibujadas, reflejadas para salir por la izquierda (donde se abre el hueco)
-            if (!handStyle.isPhoto && hand.value > 0f) {
-                val hp = hand.value
-                val scale = 0.55f + 0.45f * hp
-                val t = clock.floatValue
-                var rotation = lerp(-18f, -6f, hp)
-                if (motion.jitterDeg > 0f) rotation += motion.jitterDeg * sin(t * 40f) * (1.2f - hp.coerceAtMost(1f))
-                if (wave.value > 0f) rotation += 14f * sin(wave.value * 4f * PI.toFloat()) * (1f - wave.value)
-                scale(scaleX = -1f, scaleY = 1f) {
-                    drawHand(
-                        handStyle,
-                        Offset(lerp(w * 0.86f, w * 0.52f, hp), lerp(h * 0.8f, h * 0.66f, hp)),
-                        palmW = w * 0.34f * scale,
-                        rotationDeg = rotation,
-                        time = if (motion.aura) t else 0f,
-                    )
-                }
-            }
         }
 
         // 4. Ondas de cada toque

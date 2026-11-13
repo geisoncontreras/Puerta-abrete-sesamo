@@ -30,18 +30,34 @@ import kotlin.random.Random
  */
 class KnockPlayer(context: Context, var mode: SoundMode = SoundMode.MEZCLA) {
 
-    private enum class Kind { PUNO, NUDILLO, PUNO_METAL, NUDILLO_METAL }
+    private enum class Kind {
+        PUNO, NUDILLO, PUNO_METAL, NUDILLO_METAL,
+        PESADA_F, PESADA_S, HUECA_F, HUECA_S, CASTILLO_F, CASTILLO_S, VIDRIO_F, VIDRIO_S, FANTASMA_F, FANTASMA_S,
+    }
 
     /** Puerta de metal: golpes sobre chapa de acero y bisagra con resonancia metálica. */
     var metal: Boolean = false
 
     private val res = context.applicationContext.resources
-    private val samples: Map<Kind, List<ShortArray>> = mapOf(
-        Kind.PUNO to PUNO.map { readWav(it) },
-        Kind.NUDILLO to NUDILLO.map { readWav(it) },
-        Kind.PUNO_METAL to PUNO_METAL.map { readWav(it) },
-        Kind.NUDILLO_METAL to NUDILLO_METAL.map { readWav(it) },
+    private val files: Map<Kind, List<Int>> = mapOf(
+        Kind.PUNO to PUNO,
+        Kind.NUDILLO to NUDILLO,
+        Kind.PUNO_METAL to PUNO_METAL,
+        Kind.NUDILLO_METAL to NUDILLO_METAL,
+        Kind.PESADA_F to listOf(R.raw.pesada_f_1, R.raw.pesada_f_2, R.raw.pesada_f_3),
+        Kind.PESADA_S to listOf(R.raw.pesada_s_1, R.raw.pesada_s_2, R.raw.pesada_s_3),
+        Kind.HUECA_F to listOf(R.raw.hueca_f_1, R.raw.hueca_f_2, R.raw.hueca_f_3),
+        Kind.HUECA_S to listOf(R.raw.hueca_s_1, R.raw.hueca_s_2, R.raw.hueca_s_3),
+        Kind.CASTILLO_F to listOf(R.raw.castillo_f_1, R.raw.castillo_f_2, R.raw.castillo_f_3),
+        Kind.CASTILLO_S to listOf(R.raw.castillo_s_1, R.raw.castillo_s_2, R.raw.castillo_s_3),
+        Kind.VIDRIO_F to listOf(R.raw.vidrio_f_1, R.raw.vidrio_f_2, R.raw.vidrio_f_3),
+        Kind.VIDRIO_S to listOf(R.raw.vidrio_s_1, R.raw.vidrio_s_2, R.raw.vidrio_s_3),
+        Kind.FANTASMA_F to listOf(R.raw.fantasma_f_1, R.raw.fantasma_f_2, R.raw.fantasma_f_3),
+        Kind.FANTASMA_S to listOf(R.raw.fantasma_s_1, R.raw.fantasma_s_2, R.raw.fantasma_s_3),
     )
+    /** Muestras para mezclar ritmos enteros; se leen solo cuando hacen falta. */
+    private val samples = mutableMapOf<Kind, List<ShortArray>>()
+    private fun samplesOf(kind: Kind): List<ShortArray> = samples.getOrPut(kind) { files.getValue(kind).map { readWav(it) } }
 
     private val pool: SoundPool = SoundPool.Builder()
         .setMaxStreams(6)
@@ -52,12 +68,8 @@ class KnockPlayer(context: Context, var mode: SoundMode = SoundMode.MEZCLA) {
                 .build()
         )
         .build()
-    private val poolIds: Map<Kind, List<Int>> = mapOf(
-        Kind.PUNO to PUNO.map { pool.load(context.applicationContext, it, 1) },
-        Kind.NUDILLO to NUDILLO.map { pool.load(context.applicationContext, it, 1) },
-        Kind.PUNO_METAL to PUNO_METAL.map { pool.load(context.applicationContext, it, 1) },
-        Kind.NUDILLO_METAL to NUDILLO_METAL.map { pool.load(context.applicationContext, it, 1) },
-    )
+    private val poolIds: Map<Kind, List<Int>> =
+        files.mapValues { (_, ids) -> ids.map { pool.load(context.applicationContext, it, 1) } }
 
     private val creakIds: List<Int> = listOf(R.raw.rechinido_1, R.raw.rechinido_2).map { pool.load(context.applicationContext, it, 1) }
     private val metalCreakIds: List<Int> = listOf(R.raw.rechinido_metal_1, R.raw.rechinido_metal_2).map { pool.load(context.applicationContext, it, 1) }
@@ -101,7 +113,7 @@ class KnockPlayer(context: Context, var mode: SoundMode = SoundMode.MEZCLA) {
         val typical = median(rhythm.intervalsMs)
         val chosen = offsets.indices.map { i ->
             val kind = kindFor(if (i == 0) null else rhythm.intervalsMs[i - 1], typical).forDoor()
-            val bank = samples.getValue(kind)
+            val bank = samplesOf(kind)
             bank[pick(kind, bank.size)]
         }
         val longest = chosen.maxOf { it.size }
@@ -160,6 +172,7 @@ class KnockPlayer(context: Context, var mode: SoundMode = SoundMode.MEZCLA) {
         pool.release()
     }
 
+    /** En puertas de metal, Mezcla/Puño/Nudillos suenan a chapa (los tipos nuevos no cambian). */
     private fun Kind.forDoor(): Kind = if (!metal) this else when (this) {
         Kind.PUNO -> Kind.PUNO_METAL
         Kind.NUDILLO -> Kind.NUDILLO_METAL
@@ -169,9 +182,12 @@ class KnockPlayer(context: Context, var mode: SoundMode = SoundMode.MEZCLA) {
     private fun kindFor(gapMs: Long?, typicalMs: Long): Kind = when (mode) {
         SoundMode.PUNO -> Kind.PUNO
         SoundMode.NUDILLO -> Kind.NUDILLO
-        SoundMode.MEZCLA ->
-            if (gapMs == null || gapMs > maxOf(550L, typicalMs * 14 / 10)) Kind.PUNO else Kind.NUDILLO
+        SoundMode.MEZCLA -> if (isAccent(gapMs, typicalMs)) Kind.PUNO else Kind.NUDILLO
+        else -> Kind.valueOf(mode.bank!!.uppercase() + if (isAccent(gapMs, typicalMs)) "_F" else "_S")
     }
+
+    /** El primer toque, o el que llega tras una pausa larga, suena fuerte. */
+    private fun isAccent(gapMs: Long?, typicalMs: Long) = gapMs == null || gapMs > maxOf(550L, typicalMs * 14 / 10)
 
     /** Índice al azar que no repite el anterior de ese tipo de golpe. */
     private fun pick(kind: Kind, size: Int): Int {

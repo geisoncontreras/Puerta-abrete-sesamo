@@ -53,16 +53,35 @@ class RhythmTest {
     fun `desbloquea con el ritmo correcto`() {
         val s = UnlockSession(secret, matcher)
         val ts = stamps(0, 410, 790, 210, 190)
-        ts.dropLast(1).forEach { assertIs<Event.TapRegistered>(s.onTap(it)) }
-        assertEquals(Event.Unlocked, s.onTap(ts.last()))
+        ts.forEach { assertIs<Event.TapRegistered>(s.onTap(it)) }
+        // No abre al instante: espera una pausa por si el usuario sigue tocando.
+        assertEquals(s.completeWaitMs, s.nextCheckDelayMs())
+        assertEquals(Event.Unlocked, s.onIdle())
+    }
+
+    @Test
+    fun `tocar de mas es fallo aunque los primeros toques sean correctos`() {
+        val s = UnlockSession(secret, matcher)
+        stamps(0, 410, 790, 210, 190).forEach { s.onTap(it) }
+        assertIs<Event.Failed>(s.onTap(1_800))
+    }
+
+    @Test
+    fun `un ritmo de tres toques no abre con tres toques cualquiera`() {
+        val three = Rhythm(listOf(300, 900))
+        val s = UnlockSession(three, matcher)
+        stamps(0, 600, 600).forEach { s.onTap(it) }
+        assertIs<Event.Failed>(s.onIdle())
+        stamps(10_000, 300, 900).forEach { s.onTap(it) }
+        assertEquals(Event.Unlocked, s.onIdle())
     }
 
     @Test
     fun `tres fallos seguidos dan la pista de media cancion`() {
         val s = UnlockSession(secret, matcher)
         repeat(3) { attempt ->
-            val events = stamps(attempt * 10_000L, 400, 400, 400, 400).map { s.onTap(it) }
-            val failed = assertIs<Event.Failed>(events.last())
+            stamps(attempt * 10_000L, 400, 400, 400, 400).forEach { s.onTap(it) }
+            val failed = assertIs<Event.Failed>(s.onIdle())
             if (attempt < 2) assertNull(failed.hint) else assertEquals(secret.firstHalf(), failed.hint)
         }
     }
@@ -70,20 +89,22 @@ class RhythmTest {
     @Test
     fun `tras la pista basta con completar el resto`() {
         val s = UnlockSession(secret, matcher)
-        repeat(3) { a -> stamps(a * 10_000L, 400, 400, 400, 400).forEach { s.onTap(it) } }
+        repeat(3) { a -> stamps(a * 10_000L, 400, 400, 400, 400).forEach { s.onTap(it) }; s.onIdle() }
         // La puerta toca los 3 primeros golpes (0, 400, 1200) y el usuario sigue con 2 más
         s.onHintPlayed(listOf(50_000L, 50_400L, 51_200L))
         assertIs<Event.TapRegistered>(s.onTap(51_420L))
-        assertEquals(Event.Unlocked, s.onTap(51_610L))
+        assertIs<Event.TapRegistered>(s.onTap(51_610L))
+        assertEquals(s.completeWaitMs, s.nextCheckDelayMs())
+        assertEquals(Event.Unlocked, s.onIdle())
     }
 
     @Test
     fun `tras la pista tambien vale tocar el ritmo entero`() {
         val s = UnlockSession(secret, matcher)
-        repeat(3) { a -> stamps(a * 10_000L, 400, 400, 400, 400).forEach { s.onTap(it) } }
+        repeat(3) { a -> stamps(a * 10_000L, 400, 400, 400, 400).forEach { s.onTap(it) }; s.onIdle() }
         s.onHintPlayed(listOf(50_000L, 50_400L, 51_200L))
-        val events = stamps(60_000L, 400, 800, 200, 200).map { s.onTap(it) }
-        assertEquals(Event.Unlocked, events.last())
+        stamps(60_000L, 400, 800, 200, 200).forEach { s.onTap(it) }
+        assertEquals(Event.Unlocked, s.onIdle())
     }
 
     @Test
