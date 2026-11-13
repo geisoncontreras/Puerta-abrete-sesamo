@@ -2,8 +2,6 @@ package com.abretesesamo.app.ui.hand
 
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.LinearOutSlowInEasing
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import com.abretesesamo.app.model.HandStyle
 
@@ -33,46 +31,13 @@ data class HandMotion(
     val retractAtEnd: Boolean = false,
 ) {
     companion object {
-        fun forStyle(style: HandStyle): HandMotion = when (style) {
-            HandStyle.ESQUELETO_REAL, HandStyle.GUANTE_NEGRO, HandStyle.PLUMAS, HandStyle.GARRA, HandStyle.DIVINA,
-            HandStyle.ROBOT, HandStyle.FUEGO, HandStyle.HIELO, HandStyle.MORADA, HandStyle.UNAS_ROSAS,
-            HandStyle.PULSERA, HandStyle.INFANTIL, HandStyle.GARRA_VERDE,
-            HandStyle.BRAZO_REAL -> HandMotion(
-                handSpec = tween(800, easing = FastOutSlowInEasing),
-                doorSpec = tween(1500, easing = FastOutSlowInEasing),
-                doorDelayMs = 350,
-                retractAtEnd = true,
-            )
-            HandStyle.ESQUELETO -> HandMotion(
-                handSpec = tween(750, easing = FastOutSlowInEasing),
-                doorSpec = tween(900, easing = FastOutSlowInEasing),
-                doorDelayMs = 250,
-                jitterDeg = 6f,
-            )
-            HandStyle.CARTOON_AMARILLA -> HandMotion(
-                handSpec = spring(dampingRatio = 0.35f, stiffness = 180f),
-                doorSpec = tween(750, easing = FastOutSlowInEasing),
-                doorDelayMs = 200,
-            )
-            HandStyle.PULSERA_ANIME -> HandMotion(
-                handSpec = tween(380, easing = FastOutSlowInEasing),
-                doorSpec = tween(480, easing = LinearOutSlowInEasing),
-                doorDelayMs = 120,
-                aura = true,
-            )
-            HandStyle.MONSTRUO_VERDE -> HandMotion(
-                handSpec = tween(420, easing = FastOutSlowInEasing),
-                doorSpec = tween(260, easing = LinearOutSlowInEasing),
-                doorDelayMs = 150,
-                preRattles = 3,
-                slamShake = true,
-            )
-            HandStyle.GUANTE_BLANCO -> HandMotion(
-                handSpec = tween(1000, easing = FastOutSlowInEasing),
-                doorSpec = tween(1000, easing = FastOutSlowInEasing),
-                doorDelayMs = 300,
-                waveAtEnd = true,
-            )
-        }
+        /** Todas las manos son de foto y abren igual: salen, empujan, sueltan y vuelven. */
+        @Suppress("UNUSED_PARAMETER")
+        fun forStyle(style: HandStyle): HandMotion = HandMotion(
+            handSpec = tween(800, easing = FastOutSlowInEasing),
+            doorSpec = tween(1500, easing = FastOutSlowInEasing),
+            doorDelayMs = 350,
+            retractAtEnd = true,
+        )
     }
 }
