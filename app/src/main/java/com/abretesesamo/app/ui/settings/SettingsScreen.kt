@@ -31,6 +31,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -38,6 +39,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -66,6 +68,7 @@ import com.abretesesamo.app.lock.LockActivity
 import com.abretesesamo.app.lock.LockService
 import com.abretesesamo.app.model.DoorStyle
 import com.abretesesamo.app.model.HandStyle
+import com.abretesesamo.app.model.SoundMode
 import com.abretesesamo.app.ui.door.drawDoor
 import com.abretesesamo.app.ui.hand.drawHand
 import kotlinx.coroutines.launch
@@ -74,7 +77,8 @@ import kotlinx.coroutines.launch
 fun SettingsScreen(settings: SettingsRepository) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val player = remember { KnockPlayer() }
+    val player = remember { KnockPlayer(context, settings.soundMode) }
+    DisposableEffect(Unit) { onDispose { player.release() } }
     val doorPhoto = ImageBitmap.imageResource(R.drawable.puerta_modelo)
     val armPhoto = ImageBitmap.imageResource(R.drawable.brazo_real)
 
@@ -82,6 +86,7 @@ fun SettingsScreen(settings: SettingsRepository) {
     var tolerance by remember { mutableIntStateOf(settings.tolerancePercent) }
     var door by remember { mutableStateOf(settings.doorStyle) }
     var hand by remember { mutableStateOf(settings.handStyle) }
+    var sound by remember { mutableStateOf(settings.soundMode) }
     var enabled by remember { mutableStateOf(settings.lockEnabled) }
     var recording by remember { mutableStateOf(false) }
 
@@ -135,6 +140,25 @@ fun SettingsScreen(settings: SettingsRepository) {
                 steps = 5,
             )
             Text("Más alto = más fácil de abrir, pero también más fácil de adivinar.", fontSize = 13.sp)
+        }
+
+        Section("Sonido de los toques") {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                SoundMode.entries.forEach { mode ->
+                    FilterChip(
+                        selected = mode == sound,
+                        onClick = {
+                            sound = mode; settings.soundMode = mode; player.mode = mode
+                            player.preview()
+                        },
+                        label = { Text(mode.displayName) },
+                    )
+                }
+            }
+            Text("Son grabaciones reales, golpe a golpe. En «Mezcla natural» el primer toque tras una pausa suena fuerte (puño) y los rápidos con nudillos.", fontSize = 13.sp)
+            rhythm?.let { r ->
+                OutlinedButton(onClick = { scope.launch { player.play(r) } }) { Text("Probar con mi ritmo") }
+            }
         }
 
         Section("3. Elige tu puerta") {
@@ -216,6 +240,7 @@ fun SettingsScreen(settings: SettingsRepository) {
         RecordRhythmDialog(
             matcher = settings.matcher(),
             doorStyle = door,
+            player = player,
             onSaved = { r -> settings.rhythm = r; rhythm = r },
             onDismiss = { recording = false },
         )

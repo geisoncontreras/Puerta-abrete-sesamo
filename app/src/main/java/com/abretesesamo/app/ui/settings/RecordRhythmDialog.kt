@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.abretesesamo.app.audio.KnockPlayer
 import com.abretesesamo.app.model.DoorStyle
 import com.abretesesamo.app.ui.door.drawDoor
 import com.abretesesamo.core.rhythm.Rhythm
@@ -56,6 +57,7 @@ private const val END_OF_TAKE_MS = 2_000L
 fun RecordRhythmDialog(
     matcher: RhythmMatcher,
     doorStyle: DoorStyle,
+    player: KnockPlayer,
     onSaved: (Rhythm) -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -97,6 +99,7 @@ fun RecordRhythmDialog(
                         awaitEachGesture {
                             val down = awaitFirstDown(requireUnconsumed = false)
                             view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+                            player.tap(down.uptimeMillis)
                             taps += down.uptimeMillis
                         }
                     }

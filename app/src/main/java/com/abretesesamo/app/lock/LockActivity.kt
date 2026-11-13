@@ -14,6 +14,7 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.ViewModelProvider
+import com.abretesesamo.app.audio.KnockPlayer
 import com.abretesesamo.app.data.SettingsRepository
 import com.abretesesamo.app.ui.door.DoorLockScreen
 import com.abretesesamo.app.ui.theme.PuertaTheme
@@ -42,7 +43,7 @@ class LockActivity : ComponentActivity() {
             finish()
             return
         }
-        viewModel = ViewModelProvider(this, LockViewModel.factory(rhythm, settings.matcher()))[LockViewModel::class.java]
+        viewModel = ViewModelProvider(this, LockViewModel.factory(rhythm, settings.matcher(), { KnockPlayer(applicationContext, settings.soundMode) }))[LockViewModel::class.java]
 
         // El botón "atrás" no abre la puerta (en modo prueba sí sale).
         onBackPressedDispatcher.addCallback(this) { if (testMode) finish() }
