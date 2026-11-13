@@ -49,6 +49,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.res.imageResource
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
+import com.abretesesamo.app.R
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -70,6 +75,8 @@ fun SettingsScreen(settings: SettingsRepository) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val player = remember { KnockPlayer() }
+    val doorPhoto = ImageBitmap.imageResource(R.drawable.puerta_modelo)
+    val armPhoto = ImageBitmap.imageResource(R.drawable.brazo_real)
 
     var rhythm by remember { mutableStateOf(settings.rhythm) }
     var tolerance by remember { mutableIntStateOf(settings.tolerancePercent) }
@@ -134,7 +141,7 @@ fun SettingsScreen(settings: SettingsRepository) {
             LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(vertical = 4.dp)) {
                 items(DoorStyle.entries) { style ->
                     Choice(selected = style == door, label = style.displayName, onClick = { door = style; settings.doorStyle = style }) {
-                        Canvas(Modifier.size(width = 84.dp, height = 140.dp)) { drawDoor(style) }
+                        Canvas(Modifier.size(width = 84.dp, height = 140.dp)) { drawDoor(style, doorPhoto) }
                     }
                 }
             }
@@ -144,8 +151,15 @@ fun SettingsScreen(settings: SettingsRepository) {
             LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(vertical = 4.dp)) {
                 items(HandStyle.entries) { style ->
                     Choice(selected = style == hand, label = style.displayName, onClick = { hand = style; settings.handStyle = style }) {
-                        Canvas(Modifier.size(width = 96.dp, height = 140.dp).clip(RoundedCornerShape(10.dp)).background(Color(0xFF3A2A1C))) {
-                            drawHand(style, Offset(size.width / 2, size.height * 0.72f), palmW = size.width * 0.42f, rotationDeg = 0f, time = 0.3f)
+                        val bg = if (style == HandStyle.BRAZO_REAL) Color(0xFF050403) else Color(0xFF3A2A1C)
+                        Canvas(Modifier.size(width = 96.dp, height = 140.dp).clip(RoundedCornerShape(10.dp)).background(bg)) {
+                            if (style == HandStyle.BRAZO_REAL) {
+                                val aw = size.width * 0.95f
+                                val ah = aw * armPhoto.height / armPhoto.width
+                                drawImage(armPhoto, dstOffset = IntOffset(0, ((size.height - ah) / 2).toInt()), dstSize = IntSize(aw.toInt(), ah.toInt()))
+                            } else {
+                                drawHand(style, Offset(size.width / 2, size.height * 0.72f), palmW = size.width * 0.42f, rotationDeg = 0f, time = 0.3f)
+                            }
                         }
                     }
                 }

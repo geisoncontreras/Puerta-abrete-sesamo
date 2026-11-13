@@ -5,6 +5,7 @@ package com.abretesesamo.app.model
  * forma de abrir la puerta, definida en ui/hand/HandMotion.kt.
  */
 enum class HandStyle(val displayName: String, val description: String) {
+    BRAZO_REAL("Brazo real", "El brazo de tu modelo sale de la oscuridad y empuja la puerta"),
     ESQUELETO("Esqueleto", "Huesos que tiemblan al empujar"),
     CARTOON_AMARILLA("Cartoon amarilla", "Rebota como un dibujo animado"),
     PULSERA_ANIME("Pulsera azul anime", "Aparece con un aura de energía"),
@@ -12,6 +13,6 @@ enum class HandStyle(val displayName: String, val description: String) {
     GUANTE_BLANCO("Guante blanco", "Empuja con elegancia y saluda");
 
     companion object {
-        fun fromId(id: String?): HandStyle = entries.firstOrNull { it.name == id } ?: GUANTE_BLANCO
+        fun fromId(id: String?): HandStyle = entries.firstOrNull { it.name == id } ?: BRAZO_REAL
     }
 }

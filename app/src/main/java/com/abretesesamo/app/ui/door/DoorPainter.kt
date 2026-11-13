@@ -6,12 +6,15 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.unit.IntSize
 import com.abretesesamo.app.model.DoorStyle
 import kotlin.random.Random
 
@@ -20,18 +23,33 @@ import kotlin.random.Random
  * Para usar fotos/texturas reales basta con cambiar drawDoor() por un drawImage().
  */
 
-/** Dibuja la hoja de la puerta ocupando todo el DrawScope. */
-fun DrawScope.drawDoor(style: DoorStyle) {
-    when (style) {
-        DoorStyle.MADERA_RUSTICA -> drawRusticWood()
-        DoorStyle.METAL_INDUSTRIAL -> drawIndustrialMetal()
-        DoorStyle.MEDIEVAL -> drawMedieval()
-        DoorStyle.MODERNA -> drawModern()
+/**
+ * Dibuja la hoja de la puerta ocupando todo el DrawScope (borde a borde, sin marco).
+ * Todas tienen las bisagras a la derecha, como el modelo: las dibujadas se reflejan.
+ */
+fun DrawScope.drawDoor(style: DoorStyle, photo: ImageBitmap? = null) {
+    if (style == DoorStyle.FOTO_MODELO) {
+        if (photo != null) {
+            drawImage(photo, dstSize = IntSize(size.width.toInt(), size.height.toInt()))
+        } else {
+            drawRect(Color(0xFFB8936A))
+        }
+        return
+    }
+    scale(scaleX = -1f, scaleY = 1f) {
+        when (style) {
+            DoorStyle.MADERA_RUSTICA -> drawRusticWood()
+            DoorStyle.METAL_INDUSTRIAL -> drawIndustrialMetal()
+            DoorStyle.MEDIEVAL -> drawMedieval()
+            DoorStyle.MODERNA -> drawModern()
+            DoorStyle.FOTO_MODELO -> Unit
+        }
     }
 }
 
 /** Color de la pared/marco alrededor de cada puerta. */
 fun DoorStyle.wallColor(): Color = when (this) {
+    DoorStyle.FOTO_MODELO -> Color(0xFF6E7B6A)
     DoorStyle.MADERA_RUSTICA -> Color(0xFF3B2414)
     DoorStyle.METAL_INDUSTRIAL -> Color(0xFF4A4F55)
     DoorStyle.MEDIEVAL -> Color(0xFF6B655C)

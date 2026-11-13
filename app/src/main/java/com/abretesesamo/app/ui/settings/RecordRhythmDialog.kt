@@ -28,6 +28,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.res.imageResource
+import com.abretesesamo.app.R
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.style.TextAlign
@@ -61,6 +64,7 @@ fun RecordRhythmDialog(
     var message by remember { mutableStateOf("Toca tu ritmo secreto sobre la puerta (mínimo 3 toques).\nCuando termines, espera 2 segundos.") }
     var done by remember { mutableStateOf(false) }
     val view = LocalView.current
+    val photo = ImageBitmap.imageResource(R.drawable.puerta_modelo)
 
     // Fin de la toma: 2 s sin tocar
     LaunchedEffect(taps.size) {
@@ -96,7 +100,7 @@ fun RecordRhythmDialog(
                             taps += down.uptimeMillis
                         }
                     }
-            ) { drawDoor(doorStyle) }
+            ) { drawDoor(doorStyle, photo) }
 
             Column(
                 Modifier
